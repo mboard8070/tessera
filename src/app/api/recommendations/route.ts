@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import type { PaperRow } from "@/lib/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 const S2_BASE = "https://api.semanticscholar.org/graph/v1";
 const S2_FIELDS = "paperId,title,abstract,year,authors,externalIds,url,citationCount";
@@ -115,6 +116,7 @@ interface Recommendation {
 }
 
 async function fetchS2Recommendations(paperIds: string[], limit: number): Promise<S2Paper[]> {
+  await rateLimit("semantic_scholar");
   const res = await fetch(`${S2_BASE}/paper/batch`, {
     method: "POST",
     headers: { ...HEADERS, "Content-Type": "application/json" },
@@ -126,6 +128,7 @@ async function fetchS2Recommendations(paperIds: string[], limit: number): Promis
     const allRecs: S2Paper[] = [];
     for (const id of paperIds.slice(0, 3)) {
       try {
+        await rateLimit("semantic_scholar");
         const recRes = await fetch(
           `${S2_BASE}/recommendations/v1/papers/forpaper/${id}?fields=${S2_FIELDS}&limit=${Math.ceil(limit / 3)}`,
           { headers: HEADERS }
@@ -141,6 +144,7 @@ async function fetchS2Recommendations(paperIds: string[], limit: number): Promis
 
   // Use the multi-paper recommendations endpoint
   try {
+    await rateLimit("semantic_scholar");
     const recRes = await fetch(`${S2_BASE}/recommendations/v1/papers/`, {
       method: "POST",
       headers: { ...HEADERS, "Content-Type": "application/json" },
@@ -160,6 +164,7 @@ async function fetchS2Recommendations(paperIds: string[], limit: number): Promis
   const allRecs: S2Paper[] = [];
   for (const id of paperIds.slice(0, 3)) {
     try {
+      await rateLimit("semantic_scholar");
       const recRes = await fetch(
         `${S2_BASE}/recommendations/v1/papers/forpaper/${id}?fields=${S2_FIELDS}&limit=${Math.ceil(limit / 3)}`,
         { headers: HEADERS }
@@ -175,6 +180,7 @@ async function fetchS2Recommendations(paperIds: string[], limit: number): Promis
 
 async function fetchS2References(s2Id: string, limit: number): Promise<S2Paper[]> {
   try {
+    await rateLimit("semantic_scholar");
     const res = await fetch(
       `${S2_BASE}/paper/${s2Id}/references?fields=${S2_FIELDS}&limit=${limit}`,
       { headers: HEADERS }

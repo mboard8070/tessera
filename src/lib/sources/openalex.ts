@@ -1,4 +1,5 @@
 import type { SearchResult } from "@/lib/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 const BASE_URL = "https://api.openalex.org";
 
@@ -24,6 +25,7 @@ export async function searchOpenAlex(query: string, limit = 10, offset = 0): Pro
   const page = Math.floor(offset / limit) + 1;
   const url = `${BASE_URL}/works?search=${encodeURIComponent(query)}&per_page=${limit}&page=${page}&mailto=litreview@localhost`;
 
+  await rateLimit("openalex");
   const res = await fetch(url, {
     headers: { "User-Agent": "LitReviewAgent/1.0 (mailto:litreview@localhost)" },
   });

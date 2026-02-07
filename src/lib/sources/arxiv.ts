@@ -1,5 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import type { SearchResult } from "@/lib/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 const BASE_URL = "https://export.arxiv.org/api/query";
 
@@ -16,6 +17,7 @@ interface ArxivEntry {
 export async function searchArxiv(query: string, limit = 10, offset = 0): Promise<SearchResult[]> {
   const url = `${BASE_URL}?search_query=all:${encodeURIComponent(query)}&start=${offset}&max_results=${limit}`;
 
+  await rateLimit("arxiv");
   const res = await fetch(url, {
     headers: { "User-Agent": "LitReviewAgent/1.0" },
   });

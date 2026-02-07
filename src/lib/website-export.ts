@@ -350,6 +350,15 @@ function categoryColor(cat: string): string {
   return colors[cat] || "#a1a1aa";
 }
 
+const ATTRIBUTION_HTML = `<footer class="attribution-footer">
+  Data provided by
+  <a href="https://www.semanticscholar.org/" target="_blank" rel="noopener">Semantic Scholar</a> ·
+  <a href="https://arxiv.org/" target="_blank" rel="noopener">arXiv</a> ·
+  <a href="https://openalex.org/" target="_blank" rel="noopener">OpenAlex</a> ·
+  <a href="https://www.crossref.org/" target="_blank" rel="noopener">CrossRef</a> ·
+  <a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener">PubMed</a>
+</footer>`;
+
 function htmlShell(
   title: string,
   content: string,
@@ -367,6 +376,7 @@ function htmlShell(
 </head>
 <body>
   ${content}
+  ${ATTRIBUTION_HTML}
 </body>
 </html>`;
 }
@@ -624,6 +634,14 @@ function renderGraph(collectionName: string): string {
     <a href="knowledge.html">Knowledge</a>
   </div>
   <div id="graph-root"></div>
+  <footer class="attribution-footer" style="position:fixed;bottom:0;right:0;left:auto;border-top:none;border-radius:8px 0 0 0;padding:6px 12px;">
+    Data provided by
+    <a href="https://www.semanticscholar.org/" target="_blank" rel="noopener">Semantic Scholar</a> ·
+    <a href="https://arxiv.org/" target="_blank" rel="noopener">arXiv</a> ·
+    <a href="https://openalex.org/" target="_blank" rel="noopener">OpenAlex</a> ·
+    <a href="https://www.crossref.org/" target="_blank" rel="noopener">CrossRef</a> ·
+    <a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener">PubMed</a>
+  </footer>
   <script src="assets/graph-bundle.js"></script>
 </body>
 </html>`;
@@ -787,6 +805,18 @@ a:hover { color: var(--accent); }
 
 /* Empty state */
 .empty-state { color: var(--text-dim); font-size: 0.9rem; font-style: italic; padding: 32px 0; text-align: center; }
+
+/* Attribution footer */
+.attribution-footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+.attribution-footer a { color: var(--text-muted); }
+.attribution-footer a:hover { color: var(--accent-light); }
 
 /* Responsive */
 @media (max-width: 640px) {

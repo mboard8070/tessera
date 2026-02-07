@@ -1,5 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import type { SearchResult } from "@/lib/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 const ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
 const EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
@@ -31,6 +32,7 @@ export async function searchPubMed(query: string, limit = 10, offset = 0): Promi
 async function searchPmids(query: string, limit: number, offset = 0): Promise<string[]> {
   const url = `${ESEARCH_URL}?db=pubmed&retmode=json&term=${encodeURIComponent(query)}&retmax=${limit}&retstart=${offset}`;
 
+  await rateLimit("pubmed");
   const res = await fetch(url, { headers: HEADERS });
   if (!res.ok) return [];
 
@@ -46,6 +48,7 @@ async function searchPmids(query: string, limit: number, offset = 0): Promise<st
 async function fetchRecords(pmids: string[]): Promise<SearchResult[]> {
   const url = `${EFETCH_URL}?db=pubmed&id=${pmids.join(",")}&retmode=xml&rettype=abstract`;
 
+  await rateLimit("pubmed");
   const res = await fetch(url, { headers: HEADERS });
   if (!res.ok) return [];
 

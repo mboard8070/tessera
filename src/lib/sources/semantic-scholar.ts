@@ -1,4 +1,5 @@
 import type { SearchResult } from "@/lib/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 const BASE_URL = "https://api.semanticscholar.org/graph/v1";
 
@@ -22,6 +23,7 @@ export async function searchSemanticScholar(query: string, limit = 10, offset = 
   const fields = "paperId,title,abstract,year,authors,externalIds,url,citationCount";
   const url = `${BASE_URL}/paper/search?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&fields=${fields}`;
 
+  await rateLimit("semantic_scholar");
   const res = await fetch(url, {
     headers: { "User-Agent": "LitReviewAgent/1.0" },
   });
@@ -36,6 +38,7 @@ export async function getSemanticScholarPaper(paperId: string): Promise<SearchRe
   const fields = "paperId,title,abstract,year,authors,externalIds,url,citationCount";
   const url = `${BASE_URL}/paper/${encodeURIComponent(paperId)}?fields=${fields}`;
 
+  await rateLimit("semantic_scholar");
   const res = await fetch(url, {
     headers: { "User-Agent": "LitReviewAgent/1.0" },
   });
@@ -49,6 +52,7 @@ export async function getSemanticScholarPaper(paperId: string): Promise<SearchRe
 export async function getCitations(paperId: string, limit = 100): Promise<string[]> {
   const url = `${BASE_URL}/paper/${encodeURIComponent(paperId)}/citations?fields=paperId&limit=${limit}`;
 
+  await rateLimit("semantic_scholar");
   const res = await fetch(url, {
     headers: { "User-Agent": "LitReviewAgent/1.0" },
   });
@@ -64,6 +68,7 @@ export async function getCitations(paperId: string, limit = 100): Promise<string
 export async function getReferences(paperId: string, limit = 100): Promise<string[]> {
   const url = `${BASE_URL}/paper/${encodeURIComponent(paperId)}/references?fields=paperId&limit=${limit}`;
 
+  await rateLimit("semantic_scholar");
   const res = await fetch(url, {
     headers: { "User-Agent": "LitReviewAgent/1.0" },
   });

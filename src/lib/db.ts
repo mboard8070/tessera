@@ -2,7 +2,8 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 
-const DB_PATH = path.join(process.cwd(), "data", "litreview.db");
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), "data");
+const DB_PATH = path.join(DATA_DIR, "litreview.db");
 
 // Ensure data directory exists
 const dataDir = path.dirname(DB_PATH);
@@ -144,9 +145,15 @@ function initSchema(db: Database.Database) {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    -- Add relationship_type to citations if not exists
-    -- SQLite doesn't support ALTER TABLE ADD COLUMN IF NOT EXISTS,
-    -- so we handle this gracefully
+    CREATE TABLE IF NOT EXISTS demo_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      institution TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT '',
+      message TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
 
     -- Indexes for common queries
     CREATE INDEX IF NOT EXISTS idx_annotations_paper ON annotations(paper_id);

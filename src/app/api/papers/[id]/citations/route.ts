@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import type { PaperRow } from "@/lib/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 const S2_BASE = "https://api.semanticscholar.org/graph/v1";
 const S2_FIELDS = "paperId,title,abstract,year,authors,externalIds,url,citationCount";
@@ -132,6 +133,7 @@ async function resolveS2Id(paper: PaperRow): Promise<string | null> {
   // Try DOI first
   if (paper.doi) {
     try {
+      await rateLimit("semantic_scholar");
       const res = await fetch(`${S2_BASE}/paper/DOI:${paper.doi}?fields=paperId`, {
         headers: { "User-Agent": "LitReviewAgent/1.0" },
       });
@@ -145,6 +147,7 @@ async function resolveS2Id(paper: PaperRow): Promise<string | null> {
   // Try arXiv ID
   if (paper.arxiv_id) {
     try {
+      await rateLimit("semantic_scholar");
       const res = await fetch(`${S2_BASE}/paper/ArXiv:${paper.arxiv_id}?fields=paperId`, {
         headers: { "User-Agent": "LitReviewAgent/1.0" },
       });
@@ -157,6 +160,7 @@ async function resolveS2Id(paper: PaperRow): Promise<string | null> {
 
   // Fall back to title search
   try {
+    await rateLimit("semantic_scholar");
     const res = await fetch(
       `${S2_BASE}/paper/search?query=${encodeURIComponent(paper.title)}&limit=1&fields=paperId`,
       { headers: { "User-Agent": "LitReviewAgent/1.0" } }
@@ -172,6 +176,7 @@ async function resolveS2Id(paper: PaperRow): Promise<string | null> {
 
 async function fetchS2References(s2Id: string): Promise<S2Paper[]> {
   try {
+    await rateLimit("semantic_scholar");
     const res = await fetch(
       `${S2_BASE}/paper/${s2Id}/references?fields=${S2_FIELDS}&limit=50`,
       { headers: { "User-Agent": "LitReviewAgent/1.0" } }
@@ -188,6 +193,7 @@ async function fetchS2References(s2Id: string): Promise<S2Paper[]> {
 
 async function fetchS2Citations(s2Id: string): Promise<S2Paper[]> {
   try {
+    await rateLimit("semantic_scholar");
     const res = await fetch(
       `${S2_BASE}/paper/${s2Id}/citations?fields=${S2_FIELDS}&limit=50`,
       { headers: { "User-Agent": "LitReviewAgent/1.0" } }

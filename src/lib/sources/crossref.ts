@@ -1,4 +1,5 @@
 import type { SearchResult } from "@/lib/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 const BASE_URL = "https://api.crossref.org/works";
 
@@ -17,6 +18,7 @@ interface CRWork {
 export async function searchCrossRef(query: string, limit = 10, offset = 0): Promise<SearchResult[]> {
   const url = `${BASE_URL}?query=${encodeURIComponent(query)}&rows=${limit}&offset=${offset}&mailto=litreview@localhost`;
 
+  await rateLimit("crossref");
   const res = await fetch(url, {
     headers: { "User-Agent": "LitReviewAgent/1.0 (mailto:litreview@localhost)" },
   });
@@ -30,6 +32,7 @@ export async function searchCrossRef(query: string, limit = 10, offset = 0): Pro
 export async function resolveDoi(doi: string): Promise<SearchResult | null> {
   const url = `${BASE_URL}/${encodeURIComponent(doi)}`;
 
+  await rateLimit("crossref");
   const res = await fetch(url, {
     headers: { "User-Agent": "LitReviewAgent/1.0 (mailto:litreview@localhost)" },
   });

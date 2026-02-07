@@ -43,7 +43,8 @@ export async function POST(
   }
 
   // Save PDF to disk
-  const pdfDir = path.join(process.cwd(), "data", "pdfs");
+  const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), "data");
+  const pdfDir = path.join(DATA_DIR, "pdfs");
   if (!fs.existsSync(pdfDir)) {
     fs.mkdirSync(pdfDir, { recursive: true });
   }
