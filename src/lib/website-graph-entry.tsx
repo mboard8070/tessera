@@ -15,9 +15,6 @@ import {
 } from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
 
-// Inline xyflow styles will be injected by esbuild css loader — we skip the import
-// and rely on the bundled CSS or inline styles in the HTML shell.
-
 interface GraphNode {
   id: string;
   paperId: number;
@@ -35,21 +32,19 @@ interface GraphEdge {
   strength?: number;
 }
 
-const NODE_WIDTH = 250;
-const NODE_HEIGHT = 80;
+const NODE_WIDTH = 220;
+const NODE_HEIGHT = 70;
 
 const EDGE_COLORS: Record<string, string> = {
   supports: "#4ade80",
   contradicts: "#f87171",
-  mentions: "#6ee7b7",
-  co_citation: "#818cf8",
-  bibliographic_coupling: "#fbbf24",
+  mentions: "#52525b",
 };
 
 function getLayoutedElements(nodes: Node[], edges: Edge[]) {
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: "TB", nodesep: 60, ranksep: 100 });
+  g.setGraph({ rankdir: "LR", nodesep: 80, ranksep: 200, marginx: 40, marginy: 40 });
 
   nodes.forEach((node) => {
     g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
@@ -83,8 +78,8 @@ function PaperNode({ data }: { data: Record<string, unknown> }) {
   const handleStyle = {
     background: "transparent",
     border: "none",
-    width: "8px",
-    height: "2px",
+    width: "2px",
+    height: "8px",
     minWidth: 0,
     minHeight: 0,
   };
@@ -94,20 +89,20 @@ function PaperNode({ data }: { data: Record<string, unknown> }) {
       href={`papers/${paperId}.html`}
       style={{
         display: "block",
-        background: "#27272a",
-        border: "1px solid #3f3f46",
+        background: "rgba(39, 39, 42, 0.9)",
+        border: "1px solid rgba(63, 63, 70, 0.8)",
         borderRadius: "8px",
-        padding: "12px",
-        width: "250px",
+        padding: "10px 12px",
+        width: "220px",
         textDecoration: "none",
         color: "inherit",
         cursor: "pointer",
         transition: "border-color 0.2s",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#10b981")}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#3f3f46")}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.7)")}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(63, 63, 70, 0.8)")}
     >
-      <Handle type="target" position={Position.Top} style={handleStyle} />
+      <Handle type="target" position={Position.Left} style={handleStyle} />
       <p
         style={{
           fontSize: "11px",
@@ -128,20 +123,20 @@ function PaperNode({ data }: { data: Record<string, unknown> }) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginTop: "6px",
+          marginTop: "4px",
         }}
       >
-        <span style={{ fontSize: "10px", color: "#a1a1aa" }}>
+        <span style={{ fontSize: "9px", color: "#71717a" }}>
           {authors?.[0] || "Unknown"}
-          {year ? `, ${year}` : ""}
+          {year ? ` · ${year}` : ""}
         </span>
         {citationCount > 0 && (
-          <span style={{ fontSize: "10px", color: "#34d399" }}>
+          <span style={{ fontSize: "9px", color: "rgba(16, 185, 129, 0.8)" }}>
             {citationCount} cited
           </span>
         )}
       </div>
-      <Handle type="source" position={Position.Bottom} style={handleStyle} />
+      <Handle type="source" position={Position.Right} style={handleStyle} />
     </a>
   );
 }
@@ -181,37 +176,22 @@ function GraphApp() {
       },
     }));
 
-    const flowEdges: Edge[] = graphData.edges.map((e, i) => {
-      const isCitation = e.type === "citation";
-      const color = isCitation
-        ? EDGE_COLORS[e.relationship || "mentions"]
-        : EDGE_COLORS[e.type];
+    // Only show direct citation edges
+    const citationEdges = graphData.edges.filter((e) => e.type === "citation");
+
+    const flowEdges: Edge[] = citationEdges.map((e, i) => {
+      const color = EDGE_COLORS[e.relationship || "mentions"];
 
       return {
         id: `e-${i}`,
         source: e.source,
         target: e.target,
-        markerEnd: isCitation
-          ? { type: MarkerType.ArrowClosed, color }
-          : undefined,
+        type: "smoothstep",
+        markerEnd: { type: MarkerType.ArrowClosed, color, width: 16, height: 16 },
         style: {
           stroke: color,
-          strokeWidth: isCitation
-            ? 2
-            : Math.min(1.5 + (e.strength || 1) * 0.5, 4),
-          strokeDasharray: isCitation ? undefined : "6 3",
+          strokeWidth: 2,
         },
-        label: !isCitation
-          ? e.type === "co_citation"
-            ? "co-cited"
-            : "shared refs"
-          : e.relationship === "supports"
-            ? "supports"
-            : e.relationship === "contradicts"
-              ? "contradicts"
-              : undefined,
-        labelStyle: { fill: color, fontSize: 9 },
-        labelBgStyle: { fill: "#09090b", fillOpacity: 0.8 },
       };
     });
 
@@ -276,11 +256,12 @@ function GraphApp() {
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
         fitView
+        fitViewOptions={{ padding: 0.3 }}
         style={{ background: "#09090b" }}
         minZoom={0.1}
         maxZoom={3}
       >
-        <Background color="#27272a" gap={20} />
+        <Background color="#1c1c1e" gap={24} size={1} />
         <Controls
           style={{
             background: "#27272a",
@@ -305,22 +286,16 @@ function GraphApp() {
           bottom: "16px",
           left: "16px",
           background: "rgba(24, 24, 27, 0.9)",
-          border: "1px solid #3f3f46",
+          border: "1px solid #27272a",
           borderRadius: "8px",
-          padding: "12px",
-          fontSize: "12px",
+          padding: "10px 12px",
+          fontSize: "11px",
         }}
       >
         {[
           { color: EDGE_COLORS.supports, label: "Supports" },
           { color: EDGE_COLORS.contradicts, label: "Contradicts" },
           { color: EDGE_COLORS.mentions, label: "Cites" },
-          { color: EDGE_COLORS.co_citation, label: "Co-cited", dashed: true },
-          {
-            color: EDGE_COLORS.bibliographic_coupling,
-            label: "Shared refs",
-            dashed: true,
-          },
         ].map((item) => (
           <div
             key={item.label}
@@ -333,13 +308,13 @@ function GraphApp() {
           >
             <div
               style={{
-                width: "24px",
+                width: "20px",
                 height: "2px",
                 backgroundColor: item.color,
-                borderStyle: item.dashed ? "dashed" : "solid",
+                borderRadius: "1px",
               }}
             />
-            <span style={{ color: "#d4d4d8" }}>{item.label}</span>
+            <span style={{ color: "#a1a1aa" }}>{item.label}</span>
           </div>
         ))}
       </div>

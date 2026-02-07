@@ -42,28 +42,29 @@ interface Props {
   onNodeClick?: (paperId: number) => void;
 }
 
-const NODE_WIDTH = 250;
-const NODE_HEIGHT = 80;
+const NODE_WIDTH = 220;
+const NODE_HEIGHT = 70;
 
 const EDGE_COLORS: Record<string, string> = {
-  supports: "#4ade80",      // green
-  contradicts: "#f87171",   // red
-  mentions: "#6ee7b7",      // emerald
-  co_citation: "#818cf8",   // indigo
-  bibliographic_coupling: "#fbbf24", // amber
+  supports: "#4ade80",
+  contradicts: "#f87171",
+  mentions: "#52525b",
 };
 
 function getLayoutedElements(nodes: Node[], edges: Edge[]) {
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: "TB", nodesep: 60, ranksep: 100 });
+  g.setGraph({ rankdir: "LR", nodesep: 80, ranksep: 200, marginx: 40, marginy: 40 });
 
   nodes.forEach((node) => {
     g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   });
 
+  // Only use direct citation edges for layout to avoid tangled routing
   edges.forEach((edge) => {
-    g.setEdge(edge.source, edge.target);
+    if (!edge.data?.inferred) {
+      g.setEdge(edge.source, edge.target);
+    }
   });
 
   dagre.layout(g);
@@ -84,18 +85,18 @@ function getLayoutedElements(nodes: Node[], edges: Edge[]) {
 
 function PaperNode({ data }: { data: { title: string; year: number | null; authors: string[]; citationCount: number } }) {
   return (
-    <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 w-[250px] shadow-lg hover:border-emerald-500 transition-colors cursor-pointer">
-      <Handle type="target" position={Position.Top} className="!bg-transparent !border-0 !w-4 !h-1 !min-w-0 !min-h-0" />
-      <p className="text-xs font-medium text-zinc-100 line-clamp-2 leading-snug">{data.title}</p>
-      <div className="flex items-center justify-between mt-1.5">
-        <span className="text-[10px] text-zinc-400">
-          {data.authors?.[0] || "Unknown"}{data.year ? `, ${data.year}` : ""}
+    <div className="bg-zinc-800/90 border border-zinc-700/80 rounded-lg px-3 py-2.5 w-[220px] shadow-md hover:border-emerald-500/70 transition-colors cursor-pointer">
+      <Handle type="target" position={Position.Left} className="!bg-transparent !border-0 !w-1 !h-4 !min-w-0 !min-h-0" />
+      <p className="text-[11px] font-medium text-zinc-100 line-clamp-2 leading-snug">{data.title}</p>
+      <div className="flex items-center justify-between mt-1">
+        <span className="text-[9px] text-zinc-500">
+          {data.authors?.[0] || "Unknown"}{data.year ? ` · ${data.year}` : ""}
         </span>
         {data.citationCount > 0 && (
-          <span className="text-[10px] text-emerald-400">{data.citationCount} cited</span>
+          <span className="text-[9px] text-emerald-500/80">{data.citationCount} cited</span>
         )}
       </div>
-      <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-0 !w-4 !h-1 !min-w-0 !min-h-0" />
+      <Handle type="source" position={Position.Right} className="!bg-transparent !border-0 !w-1 !h-4 !min-w-0 !min-h-0" />
     </div>
   );
 }
@@ -139,27 +140,23 @@ export function CitationGraph({ collectionId, paperId, onNodeClick }: Props) {
       },
     }));
 
-    const flowEdges: Edge[] = graphData.edges.map((e, i) => {
-      const isCitation = e.type === "citation";
-      const color = isCitation
-        ? EDGE_COLORS[e.relationship || "mentions"]
-        : EDGE_COLORS[e.type];
+    // Only show direct citation edges — skip co_citation and bibliographic_coupling
+    const citationEdges = graphData.edges.filter((e) => e.type === "citation");
+
+    const flowEdges: Edge[] = citationEdges.map((e, i) => {
+      const color = EDGE_COLORS[e.relationship || "mentions"];
 
       return {
         id: `e-${i}`,
         source: e.source,
         target: e.target,
-        markerEnd: isCitation ? { type: MarkerType.ArrowClosed, color } : undefined,
+        type: "smoothstep",
+        markerEnd: { type: MarkerType.ArrowClosed, color, width: 16, height: 16 },
         style: {
           stroke: color,
-          strokeWidth: isCitation ? 2 : Math.min(1.5 + (e.strength || 1) * 0.5, 4),
-          strokeDasharray: isCitation ? undefined : "6 3",
+          strokeWidth: 2,
         },
-        label: !isCitation
-          ? (e.type === "co_citation" ? "co-cited" : "shared refs")
-          : (e.relationship === "supports" ? "supports" : e.relationship === "contradicts" ? "contradicts" : undefined),
-        labelStyle: { fill: color, fontSize: 9 },
-        labelBgStyle: { fill: "#09090b", fillOpacity: 0.8 },
+        data: { inferred: false },
       };
     });
 
@@ -205,11 +202,12 @@ export function CitationGraph({ collectionId, paperId, onNodeClick }: Props) {
         onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
         fitView
+        fitViewOptions={{ padding: 0.3 }}
         className="bg-zinc-950"
         minZoom={0.1}
         maxZoom={3}
       >
-        <Background color="#27272a" gap={20} />
+        <Background color="#1c1c1e" gap={24} size={1} />
         <Controls className="!bg-zinc-800 !border-zinc-700 !text-zinc-100 [&>button]:!bg-zinc-800 [&>button]:!border-zinc-700 [&>button]:!text-zinc-100 [&>button:hover]:!bg-zinc-700" />
         <MiniMap
           className="!bg-zinc-900 !border-zinc-700"
@@ -218,26 +216,18 @@ export function CitationGraph({ collectionId, paperId, onNodeClick }: Props) {
         />
       </ReactFlow>
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-zinc-900/90 border border-zinc-700 rounded-lg p-3 text-xs space-y-1.5">
+      <div className="absolute bottom-4 left-4 bg-zinc-900/90 border border-zinc-800 rounded-lg px-3 py-2.5 text-[11px] space-y-1.5">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ backgroundColor: EDGE_COLORS.supports }} />
-          <span className="text-zinc-300">Supports</span>
+          <div className="w-5 h-0.5 rounded-full" style={{ backgroundColor: EDGE_COLORS.supports }} />
+          <span className="text-zinc-400">Supports</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ backgroundColor: EDGE_COLORS.contradicts }} />
-          <span className="text-zinc-300">Contradicts</span>
+          <div className="w-5 h-0.5 rounded-full" style={{ backgroundColor: EDGE_COLORS.contradicts }} />
+          <span className="text-zinc-400">Contradicts</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ backgroundColor: EDGE_COLORS.mentions }} />
-          <span className="text-zinc-300">Cites</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5 border-t border-dashed" style={{ borderColor: EDGE_COLORS.co_citation }} />
-          <span className="text-zinc-300">Co-cited</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5 border-t border-dashed" style={{ borderColor: EDGE_COLORS.bibliographic_coupling }} />
-          <span className="text-zinc-300">Shared refs</span>
+          <div className="w-5 h-0.5 rounded-full" style={{ backgroundColor: EDGE_COLORS.mentions }} />
+          <span className="text-zinc-400">Cites</span>
         </div>
       </div>
     </div>
