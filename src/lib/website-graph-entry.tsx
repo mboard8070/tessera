@@ -5,6 +5,8 @@ import {
   Background,
   Controls,
   MiniMap,
+  Handle,
+  Position,
   useNodesState,
   useEdgesState,
   type Node,
@@ -78,6 +80,15 @@ function PaperNode({ data }: { data: Record<string, unknown> }) {
   const citationCount = data.citationCount as number;
   const paperId = data.paperId as number;
 
+  const handleStyle = {
+    background: "transparent",
+    border: "none",
+    width: "8px",
+    height: "2px",
+    minWidth: 0,
+    minHeight: 0,
+  };
+
   return (
     <a
       href={`papers/${paperId}.html`}
@@ -96,6 +107,7 @@ function PaperNode({ data }: { data: Record<string, unknown> }) {
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#10b981")}
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#3f3f46")}
     >
+      <Handle type="target" position={Position.Top} style={handleStyle} />
       <p
         style={{
           fontSize: "11px",
@@ -129,6 +141,7 @@ function PaperNode({ data }: { data: Record<string, unknown> }) {
           </span>
         )}
       </div>
+      <Handle type="source" position={Position.Bottom} style={handleStyle} />
     </a>
   );
 }
@@ -184,11 +197,10 @@ function GraphApp() {
         style: {
           stroke: color,
           strokeWidth: isCitation
-            ? 1.5
-            : Math.min(1 + (e.strength || 1) * 0.5, 4),
+            ? 2
+            : Math.min(1.5 + (e.strength || 1) * 0.5, 4),
           strokeDasharray: isCitation ? undefined : "6 3",
         },
-        animated: isCitation,
         label: !isCitation
           ? e.type === "co_citation"
             ? "co-cited"

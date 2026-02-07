@@ -6,6 +6,8 @@ import {
   Background,
   Controls,
   MiniMap,
+  Handle,
+  Position,
   useNodesState,
   useEdgesState,
   type Node,
@@ -83,6 +85,7 @@ function getLayoutedElements(nodes: Node[], edges: Edge[]) {
 function PaperNode({ data }: { data: { title: string; year: number | null; authors: string[]; citationCount: number } }) {
   return (
     <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 w-[250px] shadow-lg hover:border-emerald-500 transition-colors cursor-pointer">
+      <Handle type="target" position={Position.Top} className="!bg-transparent !border-0 !w-4 !h-1 !min-w-0 !min-h-0" />
       <p className="text-xs font-medium text-zinc-100 line-clamp-2 leading-snug">{data.title}</p>
       <div className="flex items-center justify-between mt-1.5">
         <span className="text-[10px] text-zinc-400">
@@ -92,6 +95,7 @@ function PaperNode({ data }: { data: { title: string; year: number | null; autho
           <span className="text-[10px] text-emerald-400">{data.citationCount} cited</span>
         )}
       </div>
+      <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-0 !w-4 !h-1 !min-w-0 !min-h-0" />
     </div>
   );
 }
@@ -148,10 +152,9 @@ export function CitationGraph({ collectionId, paperId, onNodeClick }: Props) {
         markerEnd: isCitation ? { type: MarkerType.ArrowClosed, color } : undefined,
         style: {
           stroke: color,
-          strokeWidth: isCitation ? 1.5 : Math.min(1 + (e.strength || 1) * 0.5, 4),
+          strokeWidth: isCitation ? 2 : Math.min(1.5 + (e.strength || 1) * 0.5, 4),
           strokeDasharray: isCitation ? undefined : "6 3",
         },
-        animated: isCitation,
         label: !isCitation
           ? (e.type === "co_citation" ? "co-cited" : "shared refs")
           : (e.relationship === "supports" ? "supports" : e.relationship === "contradicts" ? "contradicts" : undefined),
