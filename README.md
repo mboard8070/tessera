@@ -12,6 +12,40 @@ Built with Next.js, SQLite, and any OpenAI-compatible LLM.
 
 ---
 
+## Screenshots
+
+### Dashboard
+Paper library stats, recent papers, collections, and AI-recommended reading.
+
+![Dashboard](screenshots/dashboard.png)
+
+### Collection Detail
+Organize papers into research collections with BibTeX, JSON bundle, and static website export.
+
+![Collection Detail](screenshots/collection-detail.png)
+
+### Literature Synthesis
+AI-generated cross-paper literature reviews with thematic analysis and research gaps.
+
+![Literature Synthesis](screenshots/collection-synthesis.png)
+
+### Paper Detail
+Paper page with abstract, AI-generated summary, key findings, and metadata.
+
+![Paper Detail](screenshots/paper-detail.png)
+
+### Knowledge Base
+Extracted knowledge items (findings, methods, gaps, contributions, limitations) with category filters.
+
+![Knowledge Base](screenshots/knowledge.png)
+
+### Citation Graph
+Interactive citation network visualization with relationship classification and co-citation analysis.
+
+![Citation Graph](screenshots/graph.png)
+
+---
+
 ## Features
 
 ### Paper Search & Import
