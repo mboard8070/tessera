@@ -15,7 +15,9 @@ export { resolveDoi } from "./crossref";
 
 export type SourceName = "semantic_scholar" | "arxiv" | "openalex" | "crossref" | "pubmed";
 
-const sourceFns: Record<SourceName, (q: string, limit: number, offset: number) => Promise<SearchResult[]>> = {
+export type SearchMode = "general" | "author";
+
+const sourceFns: Record<SourceName, (q: string, limit: number, offset: number, mode: SearchMode) => Promise<SearchResult[]>> = {
   semantic_scholar: searchSemanticScholar,
   arxiv: searchArxiv,
   openalex: searchOpenAlex,
@@ -27,10 +29,11 @@ export async function federatedSearch(
   query: string,
   sources: SourceName[] = ["semantic_scholar", "arxiv", "openalex", "crossref", "pubmed"],
   limit = 10,
-  offset = 0
+  offset = 0,
+  mode: SearchMode = "general"
 ): Promise<SearchResult[]> {
   const promises = sources.map((s) =>
-    sourceFns[s](query, limit, offset).catch(() => [] as SearchResult[])
+    sourceFns[s](query, limit, offset, mode).catch(() => [] as SearchResult[])
   );
   const results = await Promise.all(promises);
   const all = results.flat();

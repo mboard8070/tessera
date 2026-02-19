@@ -21,9 +21,12 @@ interface OAWork {
   };
 }
 
-export async function searchOpenAlex(query: string, limit = 10, offset = 0): Promise<SearchResult[]> {
+export async function searchOpenAlex(query: string, limit = 10, offset = 0, mode: "general" | "author" = "general"): Promise<SearchResult[]> {
   const page = Math.floor(offset / limit) + 1;
-  const url = `${BASE_URL}/works?search=${encodeURIComponent(query)}&per_page=${limit}&page=${page}&mailto=litreview@localhost`;
+  const params = mode === "author"
+    ? `filter=author.search:${encodeURIComponent(query)}&per_page=${limit}&page=${page}&mailto=litreview@localhost`
+    : `search=${encodeURIComponent(query)}&per_page=${limit}&page=${page}&mailto=litreview@localhost`;
+  const url = `${BASE_URL}/works?${params}`;
 
   await rateLimit("openalex");
   const res = await fetch(url, {

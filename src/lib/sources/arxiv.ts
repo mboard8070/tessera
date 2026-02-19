@@ -14,8 +14,9 @@ interface ArxivEntry {
   link: { "@_href": string; "@_type"?: string } | { "@_href": string; "@_type"?: string }[];
 }
 
-export async function searchArxiv(query: string, limit = 10, offset = 0): Promise<SearchResult[]> {
-  const url = `${BASE_URL}?search_query=all:${encodeURIComponent(query)}&start=${offset}&max_results=${limit}`;
+export async function searchArxiv(query: string, limit = 10, offset = 0, mode: "general" | "author" = "general"): Promise<SearchResult[]> {
+  const prefix = mode === "author" ? "au" : "all";
+  const url = `${BASE_URL}?search_query=${prefix}:${encodeURIComponent(query)}&start=${offset}&max_results=${limit}`;
 
   await rateLimit("arxiv");
   const res = await fetch(url, {

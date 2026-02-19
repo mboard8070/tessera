@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { Search, Plus, ExternalLink, Loader2, FileText, BookOpen } from "lucide-react";
+import { Search, Plus, ExternalLink, Loader2, FileText, BookOpen, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +50,7 @@ export default function SearchPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchOffset, setSearchOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [searchMode, setSearchMode] = useState<"general" | "author">("general");
 
   const handleExternalSearch = useCallback(async () => {
     if (!query.trim()) return;
@@ -58,7 +59,8 @@ export default function SearchPage() {
     setSearchOffset(0);
     setHasMore(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}&limit=50&offset=0`);
+      const modeParam = searchMode === "author" ? "&mode=author" : "";
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}&limit=50&offset=0${modeParam}`);
       const data = await res.json();
       setResults(data.results || []);
       setHasMore((data.results || []).length >= 20);
@@ -67,14 +69,15 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, [query, searchMode]);
 
   const handleLoadMore = useCallback(async () => {
     if (!query.trim()) return;
     const newOffset = searchOffset + 50;
     setLoadingMore(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}&limit=50&offset=${newOffset}`);
+      const modeParam = searchMode === "author" ? "&mode=author" : "";
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}&limit=50&offset=${newOffset}${modeParam}`);
       const data = await res.json();
       const newResults = data.results || [];
       if (newResults.length === 0) {
@@ -94,7 +97,7 @@ export default function SearchPage() {
     } finally {
       setLoadingMore(false);
     }
-  }, [query, searchOffset]);
+  }, [query, searchOffset, searchMode]);
 
   const handleFullTextSearch = useCallback(async () => {
     if (!query.trim()) return;
@@ -153,7 +156,7 @@ export default function SearchPage() {
         <div className="flex gap-3 mt-4">
           <Input
             placeholder={activeTab === "external"
-              ? "Search for papers, topics, or authors..."
+              ? (searchMode === "author" ? "Search by author name..." : "Search for papers, topics, or authors...")
               : "Search across all saved paper text, abstracts, and titles..."
             }
             value={query}
@@ -161,6 +164,16 @@ export default function SearchPage() {
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             className="flex-1"
           />
+          {activeTab === "external" && (
+            <Button
+              variant={searchMode === "author" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setSearchMode(searchMode === "author" ? "general" : "author")}
+              title={searchMode === "author" ? "Author search active" : "Switch to author search"}
+            >
+              <User className="h-4 w-4" />
+            </Button>
+          )}
           <Button onClick={handleSearch} disabled={(activeTab === "external" ? loading : ftLoading) || !query.trim()}>
             {(activeTab === "external" ? loading : ftLoading)
               ? <Loader2 className="h-4 w-4 animate-spin" />

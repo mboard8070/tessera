@@ -11,10 +11,11 @@ const HEADERS = { "User-Agent": "LitReviewAgent/1.0" };
 // Public API
 // ---------------------------------------------------------------------------
 
-export async function searchPubMed(query: string, limit = 10, offset = 0): Promise<SearchResult[]> {
+export async function searchPubMed(query: string, limit = 10, offset = 0, mode: "general" | "author" = "general"): Promise<SearchResult[]> {
   try {
     // Step 1: esearch to get PMIDs
-    const pmids = await searchPmids(query, limit, offset);
+    const effectiveQuery = mode === "author" ? `${query}[AU]` : query;
+    const pmids = await searchPmids(effectiveQuery, limit, offset);
     if (pmids.length === 0) return [];
 
     // Step 2: efetch with XML to get full records including abstracts

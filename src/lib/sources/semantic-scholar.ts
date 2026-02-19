@@ -19,7 +19,7 @@ interface S2Paper {
   citations?: { paperId: string }[];
 }
 
-export async function searchSemanticScholar(query: string, limit = 10, offset = 0): Promise<SearchResult[]> {
+export async function searchSemanticScholar(query: string, limit = 10, offset = 0, mode: "general" | "author" = "general"): Promise<SearchResult[]> {
   const fields = "paperId,title,abstract,year,authors,externalIds,url,citationCount";
   const url = `${BASE_URL}/paper/search?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&fields=${fields}`;
 

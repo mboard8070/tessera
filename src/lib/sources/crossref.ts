@@ -15,8 +15,9 @@ interface CRWork {
   URL?: string;
 }
 
-export async function searchCrossRef(query: string, limit = 10, offset = 0): Promise<SearchResult[]> {
-  const url = `${BASE_URL}?query=${encodeURIComponent(query)}&rows=${limit}&offset=${offset}&mailto=litreview@localhost`;
+export async function searchCrossRef(query: string, limit = 10, offset = 0, mode: "general" | "author" = "general"): Promise<SearchResult[]> {
+  const queryParam = mode === "author" ? `query.author=${encodeURIComponent(query)}` : `query=${encodeURIComponent(query)}`;
+  const url = `${BASE_URL}?${queryParam}&rows=${limit}&offset=${offset}&mailto=litreview@localhost`;
 
   await rateLimit("crossref");
   const res = await fetch(url, {
